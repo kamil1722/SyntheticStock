@@ -1,0 +1,6 @@
+@SyntheticStockApi_HostAddress = http://localhost:5271
+
+GET {{SyntheticStockApi_HostAddress}}/syntheticstock/
+Accept: application/json
+
+###
