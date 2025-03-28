@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FuturesService\FuturesService.csproj" />
+    <ProjectReference Include="..\Microservices\FuturesService\FuturesService.csproj" />
   </ItemGroup>
 
 </Project>
