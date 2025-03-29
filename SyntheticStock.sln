@@ -5,7 +5,7 @@ VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csproj", "{8D6B33C5-CEE1-20B5-A207-99CBB61F699C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPersistenceService", "DataPersistenceService\DataPersistenceService.csproj", "{D64B4C74-8F77-6F93-541F-3180024DC407}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWorkService", "DataPersistenceService\DataWorkService.csproj", "{D64B4C74-8F77-6F93-541F-3180024DC407}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microservices", "Microservices", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
 EndProject

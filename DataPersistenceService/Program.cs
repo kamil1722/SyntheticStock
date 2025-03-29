@@ -1,7 +1,6 @@
-using DataPersistenceService;  // Assuming this is the correct namespace where Worker class is
 using Microsoft.EntityFrameworkCore;
-using DataPersistenceService.Data;
-//Add configuration info
+using DataWorkService.Data;
+using DataWorkService;
 
 public class Program
 {

@@ -5,20 +5,20 @@ namespace FuturesService.Models
     public class FuturesPriceDifference
     {
         [Key]
-        public int Id { get; set; }
+        public int id { get; set; }
 
         [Required]
-        public string Symbol1 { get; set; } = null!; // Добавляем nullable suppression operator
+        public string symbol1 { get; set; } = null!; // Добавляем nullable suppression operator
 
         [Required]
-        public string Symbol2 { get; set; } = null!; // Добавляем nullable suppression operator
+        public string symbol2 { get; set; } = null!; // Добавляем nullable suppression operator
 
         [Required]
-        public DateTime Time { get; set; }
+        public DateTime time { get; set; }
 
-        public decimal Difference { get; set; }
+        public decimal difference { get; set; }
 
         [Required]
-        public string Interval { get; set; } = null!; // Добавляем nullable suppression operator
+        public string interval { get; set; } = null!; // Добавляем nullable suppression operator
     }
 }

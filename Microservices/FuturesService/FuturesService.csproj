@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Binance.Net" Version="10.19.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
 
 </Project>

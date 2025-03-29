@@ -1,136 +1,171 @@
+
+using DataWorkService.Models;
+using Newtonsoft.Json;
+using Npgsql;
+using NpgsqlTypes;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
-using System.Text.Json;
-using DataPersistenceService.Models;
-using DataPersistenceService.Data;
 
-namespace DataPersistenceService
+namespace DataWorkService
 {
     public class Worker : BackgroundService
     {
-        public required IConnection _connection;
-        public required IModel _channel;
-
         private readonly ILogger<Worker> _logger;
-        private readonly IServiceProvider _serviceProvider;
         private readonly IConfiguration _configuration;
 
-        private readonly string _queueName;
-        private readonly string _hostname;
-        private readonly string _username;
-        private readonly string _password;
+        private IConnection _connection = null!;
+        private IModel _channel = null!;
 
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, IServiceProvider serviceProvider)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger;
+            _configuration = configuration;
 
-            _hostname = _configuration["RabbitMQ:Hostname"] ??
-                 throw new ArgumentNullException("RabbitMQ:Hostname", "RabbitMQ:Hostname configuration is missing.");
-            _queueName = _configuration["RabbitMQ:QueueName"] ??
-                throw new ArgumentNullException("RabbitMQ:QueueName", "RabbitMQ:QueueName configuration is missing.");
-            _username = _configuration["RabbitMQ:Username"] ??
-                throw new ArgumentNullException("RabbitMQ:Username", "RabbitMQ:Username configuration is missing.");
-            _password = _configuration["RabbitMQ:Password"] ??
-                throw new ArgumentNullException("RabbitMQ:Password", "RabbitMQ:Password configuration is missing.");
-
-            _serviceProvider = serviceProvider;
-
-            InitializeRabbitMQ();
+            InitializeRabbitMq();
         }
-        private void InitializeRabbitMQ()
+
+        private void InitializeRabbitMq()
         {
             try
             {
-                var factory = new ConnectionFactory
+                var factory = new ConnectionFactory()
                 {
-                    HostName = _hostname,
-                    UserName = _username,
-                    Password = _password
+                    HostName = _configuration["RabbitMQ:HostName"],
+                    Port = int.Parse(_configuration["RabbitMQ:Port"] ?? throw new ArgumentException("Parameter Port cannot be null")),
                 };
+
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
-                _channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+                _channel.ExchangeDeclare(exchange: "futures.exchange", type: ExchangeType.Direct);
+                _channel.QueueDeclare(queue: "futures.data", durable: true, exclusive: false, autoDelete: false, arguments: null);
+                _channel.QueueBind(queue: "futures.data", exchange: "futures.exchange", routingKey: "futures.data");
+
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false); // Обрабатываем по одному сообщению
+                _logger.LogInformation("RabbitMQ connection established");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error initializing RabbitMQ connection");
+                _logger.LogError($"Error initializing RabbitMQ listener: {ex.Message}");
+                throw;
             }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //RabbitMQ check state   
-            if (_connection.IsOpen)
+            stoppingToken.ThrowIfCancellationRequested();
+
+            var consumer = new EventingBasicConsumer(_channel);
+            consumer.Received += (ch, ea) =>
             {
-                _logger.LogError("RabbitMQ connection is not established.  Service will not start.");
-                return;
-            }
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            try
-            {
-                var consumer = new EventingBasicConsumer(_channel);
-                consumer.Received += async (model, ea) =>
+                try
                 {
-                    // ALWAYS USE A SCOPE HERE!
-                    using (var scope = _serviceProvider.CreateScope())
-                    {
-                        // Get a fresh DbContext instance from the scope
-                        var dbContext = scope.ServiceProvider.GetRequiredService<DbContextSyntheticStock>();// get fresh DbContext instance
+                    var body = ea.Body.ToArray();
+                    var message = Encoding.UTF8.GetString(body);
+                    _logger.LogInformation($"Received message: {message}");
 
-                        try
-                        { // Json options
-                            var options = new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true
-                            };
-                            var body = ea.Body.ToArray();
-                            var message = Encoding.UTF8.GetString(body);
-                            _logger.LogInformation($"Received message: {message}");
+                    SaveDataToPostgres(message);
 
-                            var data = JsonSerializer.Deserialize<FuturesPriceDifference>(message, options);// Deserialize data
-                            if (data != null)
-                            {
-                                dbContext.FuturesPriceDifferences.Add(data);
+                    _channel.BasicAck(ea.DeliveryTag, false); // Подтверждаем получение сообщения
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing message");
+                    _channel.BasicNack(ea.DeliveryTag, false, true); // Отправляем сообщение обратно в очередь
+                }
+            };
 
-                                await dbContext.SaveChangesAsync();
-                                _logger.LogInformation($"The item {data.Id} was successfully saved.");
-                                _channel?.BasicAck(ea.DeliveryTag, false);// Remove the message
-                            }
-                            else
-                            {
-                                _logger.LogWarning($"Can not be serialized message.");
-                                _channel?.BasicNack(ea.DeliveryTag, false, false);  // reject the message    
-                            }
-                        }
-                        catch (Exception ex) // try cach block
-                        {
-                            _logger.LogError(ex, $"Error processing message from RabbitMQ");
-                            _channel?.BasicNack(ea.DeliveryTag, false, false);//reject the message
-                        }
-                    }
-                    ;
-                };
-                _channel.BasicConsume(queue: _queueName, autoAck: false, consumer: consumer);
-                _logger.LogInformation("Consuming");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error consuming the data");
-            }
+            _channel.BasicConsume(queue: "futures.data", autoAck: false, consumer: consumer);
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 await Task.Delay(1000, stoppingToken);
             }
-
-            _channel.Close();
-            _connection.Close();
-
         }
 
-    }
+        private void SaveDataToPostgres(string message)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("Connection string is null");
 
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+
+                try
+                {
+                    var futuresDataList = JsonConvert.DeserializeObject<List<FuturesPriceDifference>>(message) ?? throw new Exception("Parameter futuresData cannot be null");
+
+                    //Валидация (предполагается, что метод IsValid существует и проверяет данные)
+                    if (!IsValid(futuresDataList))
+                    {
+                        _logger.LogError("Invalid message format received: " + message);
+                        throw new Exception("Invalid message format");
+                    }
+
+                    // SQL запрос для пакетной вставки
+                    using (var writer = conn.BeginBinaryImport("COPY \"FuturesPriceDifferences\" (\"symbol1\", \"symbol2\", \"time\", \"difference\", \"interval\") FROM STDIN (FORMAT BINARY)"))
+                    {
+                        foreach (var futuresData in futuresDataList)
+                        {
+                            writer.StartRow();
+                            writer.Write(futuresData.symbol1, NpgsqlDbType.Text);
+                            writer.Write(futuresData.symbol2, NpgsqlDbType.Text);
+                            writer.Write(futuresData.time, NpgsqlDbType.TimestampTz);
+                            writer.Write(futuresData.difference, NpgsqlDbType.Numeric);
+                            writer.Write(futuresData.interval, NpgsqlDbType.Text);
+                        }
+
+                        writer.Complete(); // Ensure data is fully written
+                    }
+
+                    _logger.LogInformation($"Bulk inserted {futuresDataList.Count} rows into PostgreSQL");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error saving data to PostgreSQL: " + ex.Message);
+                    throw; // Re-throw to Nack the message
+                }
+            }
+        }
+
+        //Валидация
+        private bool IsValid(object obj)
+        {
+            var results = new List<ValidationResult>();
+            var context = new ValidationContext(obj);
+            return Validator.TryValidateObject(obj, context, results, true);
+        }
+
+        public override void Dispose()
+        {
+            if (_channel.IsOpen)
+            {
+                try
+                {
+                    _channel.Close();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error closing RabbitMQ channel");
+                }
+            }
+
+            if (_connection.IsOpen)
+            {
+                try
+                {
+                    _connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error closing RabbitMQ connection");
+                }
+            }
+
+            base.Dispose();
+        }
+    }
 }

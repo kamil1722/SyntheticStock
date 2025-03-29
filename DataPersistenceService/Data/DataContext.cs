@@ -1,7 +1,7 @@
-﻿using DataPersistenceService.Models;
+﻿using DataWorkService.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataPersistenceService.Data
+namespace DataWorkService.Data
 {
     public class DbContextSyntheticStock : DbContext
     {

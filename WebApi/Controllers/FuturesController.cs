@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using FuturesService.Services;
+using FuturesService.Services.Interface;
+using FuturesService.Models;
 
 namespace FuturesService.Controllers
 {
@@ -7,21 +8,18 @@ namespace FuturesService.Controllers
     [Route("[controller]")]
     public class FuturesController : ControllerBase
     {
-        private readonly FuturesDataService _futuresDataService;
-        //private readonly RabbitMQPublisher _rabbitMQPublisher;
+        private readonly IFuturesDataService _futuresDataService;
         private readonly ILogger<FuturesController> _logger;
+        private readonly IRabbitMQService _rabbitMQService;
 
-        public FuturesController(
-            FuturesDataService futuresDataService,
-            //RabbitMQPublisher rabbitMQPublisher,
-            ILogger<FuturesController> logger)
+        public FuturesController(IFuturesDataService futuresDataService, ILogger<FuturesController> logger, IRabbitMQService rabbitMQService)
         {
             _futuresDataService = futuresDataService ?? throw new ArgumentNullException(nameof(futuresDataService));
-            //_rabbitMQPublisher = rabbitMQPublisher ?? throw new ArgumentNullException(nameof(rabbitMQPublisher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _rabbitMQService = rabbitMQService;
         }
 
-        [HttpGet("price_difference")]
+        [HttpGet("GetPriceDifference")]
         public async Task<IActionResult> GetPriceDifference(
             [FromQuery] string symbol1,
             [FromQuery] string symbol2,
@@ -48,13 +46,24 @@ namespace FuturesService.Controllers
                     return NotFound("No price differences found for the specified period.");
                 }
 
-                //foreach (var priceDifference in priceDifferences)
-                //{
-                //    _rabbitMQPublisher.Publish(priceDifference);
-                //}
+                var futuresDataList = new List<FuturesPriceDifference>();
 
-                _logger.LogInformation($"Published {priceDifferences.Count} price differences to RabbitMQ.");
-                return Ok(priceDifferences);
+                foreach (var diff in priceDifferences)
+                {
+                    futuresDataList.Add(new FuturesPriceDifference
+                    {
+                        symbol1 = symbol1,
+                        symbol2 = symbol2,
+                        time = diff.Time,
+                        difference = diff.Difference,
+                        interval = interval
+                    });
+                }
+
+                _rabbitMQService.Publish(futuresDataList, "futures.exchange", "futures.data");
+                _logger.LogInformation($"Published FuturesPriceDifference to RabbitMQ: Symbol1={symbol1}, Symbol2={symbol2}, Time={futuresDataList.Select(x => x.time).SingleOrDefault()}");
+
+                return Ok("Data published to RabbitMQ");
             }
             catch (Exception ex)
             {

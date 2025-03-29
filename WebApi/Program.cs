@@ -4,7 +4,6 @@ using FuturesService.Services;
 using CryptoExchange.Net.Authentication;
 using Binance.Net.Objects.Options;
 using FuturesService.Services.Interface;
-using FuturesService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +46,7 @@ builder.Services.AddTransient<IBinanceRestClient, BinanceRestClient>(provider =>
 builder.Services.AddScoped<IFuturesDataService, FuturesDataService>();
 
 // 5. Configure RabbitMQPublisher   //Add RabbitMQ
-//builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>(); // Регистрируем RabbitMQPublisher
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
 // 6. Add controllers  //Add Controllers
 builder.Services.AddControllers();
