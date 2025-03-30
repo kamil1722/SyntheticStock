@@ -3,16 +3,19 @@ using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
 using FuturesService.Models;
 using FuturesService.Services.Interface;
+using Microsoft.Extensions.Logging;
 
 namespace FuturesService.Services
 {
     public class FuturesDataService : IFuturesDataService
     {
         private readonly IBinanceRestClient _binanceClient;
+        private readonly ILogger<FuturesDataService> _logger;
 
-        public FuturesDataService(IBinanceRestClient binanceClient)
+        public FuturesDataService(IBinanceRestClient binanceClient, ILogger<FuturesDataService> logger)
         {
             _binanceClient = binanceClient ?? throw new ArgumentNullException(nameof(binanceClient));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         private KlineInterval ParseInterval(string interval)
@@ -36,20 +39,20 @@ namespace FuturesService.Services
         {
             try
             {
-                var klineInterval = ParseInterval(interval); // Используем ParseInterval
+                var klineInterval = ParseInterval(interval);
                 var klinesResult = await _binanceClient.SpotApi.ExchangeData.GetKlinesAsync(symbol, klineInterval, startTime, endTime);
 
                 if (!klinesResult.Success)
                 {
-                    Console.WriteLine($"Ошибка при получении Klines для {symbol}: {klinesResult.Error}");
+                    _logger.LogError($"Ошибка при получении Klines для {symbol}: {klinesResult.Error}");
                     return null;
                 }
 
-                return klinesResult.Data.ToList();  // Changed to IBinanceKline and .ToList()
+                return klinesResult.Data.ToList();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Исключение при получении Klines для {symbol}: {ex}");
+                _logger.LogError($"Исключение при получении Klines для {symbol}: {ex}");
                 return null;
             }
         }
@@ -61,16 +64,37 @@ namespace FuturesService.Services
                 return new ();
             }
 
-            var prices1 = klines1.ToDictionary(k => k.OpenTime, k => k.ClosePrice); // Обработка null и ClosePrice
-            var prices2 = klines2.ToDictionary(k => k.OpenTime, k => k.ClosePrice); // Обработка null и ClosePrice
+            var prices1 = klines1.ToDictionary(k => k.OpenTime, k => k.ClosePrice);
+            var prices2 = klines2.ToDictionary(k => k.OpenTime, k => k.ClosePrice);
 
-            var commonTimestamps = prices1.Keys.Intersect(prices2.Keys).ToList();
+            // Получить все уникальные временные метки из обеих линий
+            var allTimestamps = prices1.Keys.Union(prices2.Keys).OrderBy(t => t).ToList();
+
             var results = new List<PriceDifferenceResult>();
 
-            foreach (var timestamp in commonTimestamps)
+            decimal? lastPrice1 = null;
+            decimal? lastPrice2 = null;
+
+            foreach (var timestamp in allTimestamps)
             {
-                var diff = prices1[timestamp] - prices2[timestamp];
-                results.Add(new () { Time = timestamp, Difference = diff });
+                var price1 = prices1.ContainsKey(timestamp) ? prices1[timestamp] : lastPrice1;
+                var price2 = prices2.ContainsKey(timestamp) ? prices2[timestamp] : lastPrice2;
+
+                if (price1.HasValue)
+                {
+                    lastPrice1 = price1;
+                }
+
+                if (price2.HasValue)
+                {
+                    lastPrice2 = price2;
+                }
+
+                if (lastPrice1.HasValue && lastPrice2.HasValue)
+                {
+                    var diff = Math.Abs(lastPrice1.Value - lastPrice2.Value);
+                    results.Add(new PriceDifferenceResult { Time = timestamp, Difference = diff });
+                }
             }
 
             return results;

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using FuturesService.Services.Interface;
 using FuturesService.Models;
+using Newtonsoft.Json;
 
 namespace FuturesService.Controllers
 {
@@ -61,9 +62,9 @@ namespace FuturesService.Controllers
                 }
 
                 _rabbitMQService.Publish(futuresDataList, "futures.exchange", "futures.data");
-                _logger.LogInformation($"Published FuturesPriceDifference to RabbitMQ: Symbol1={symbol1}, Symbol2={symbol2}, Time={futuresDataList.Select(x => x.time).SingleOrDefault()}");
+                _logger.LogInformation($"Published FuturesPriceDifference to RabbitMQ: Symbol1={symbol1}, Symbol2={symbol2}, Time={startTime} - {endTime}");
 
-                return Ok("Data published to RabbitMQ");
+                return Ok(JsonConvert.SerializeObject(futuresDataList, Formatting.Indented));
             }
             catch (Exception ex)
             {
