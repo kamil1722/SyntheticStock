@@ -34,7 +34,7 @@ namespace DataWorkService
                 var factory = new ConnectionFactory()
                 {
                     HostName = _configuration["RabbitMQ:HostName"],
-                    Port = int.Parse(_configuration["RabbitMQ:Port"] ?? throw new ArgumentException("Parameter Port cannot be null")),
+                    Port = _configuration.GetValue<int>("RabbitMQ:Port"),
                 };
 
                 _connection = factory.CreateConnection();

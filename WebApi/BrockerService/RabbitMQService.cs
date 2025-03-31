@@ -22,8 +22,8 @@ public class RabbitMQService : IRabbitMQService
         {
             var factory = new ConnectionFactory()
             {
-                HostName = _configuration["RabbitMQ:HostName"],
-                Port = int.Parse(_configuration["RabbitMQ:Port"] ?? throw new Exception("Parameter Port cannot be null")),
+                HostName = _configuration["RabbitMQ:HostName"], // Получает из конфигурации
+                Port = _configuration.GetValue<int>("RabbitMQ:Port"),         
                 UserName = _configuration["RabbitMQ:UserName"],
                 Password = _configuration["RabbitMQ:Password"]
             };
