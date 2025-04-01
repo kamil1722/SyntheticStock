@@ -1,11 +1,11 @@
 
 using DataWorkService.Models;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Npgsql;
 using NpgsqlTypes;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
@@ -33,15 +33,18 @@ namespace DataWorkService
             {
                 var factory = new ConnectionFactory()
                 {
-                    HostName = _configuration["RabbitMQ:HostName"],
-                    Port = _configuration.GetValue<int>("RabbitMQ:Port"),
+                    HostName = _configuration["RABBITMQ_HOST"],
+                    Port =  int.Parse((_configuration["RABBITMQ_PORT"] ?? throw new Exception()))
                 };
 
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
 
+                // ќбъ€вл€ем обменник (exchange) с именем "futures.exchange" и типом "direct".
                 _channel.ExchangeDeclare(exchange: "futures.exchange", type: ExchangeType.Direct);
+                // ќбъ€вл€ем очередь (queue) с именем "futures.data".
                 _channel.QueueDeclare(queue: "futures.data", durable: true, exclusive: false, autoDelete: false, arguments: null);
+                // —оздаем прив€зку (binding) между очередью "futures.data" и обменником "futures.exchange", использу€ ключ маршрутизации "futures.data".
                 _channel.QueueBind(queue: "futures.data", exchange: "futures.exchange", routingKey: "futures.data");
 
                 _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false); // ќбрабатываем по одному сообщению

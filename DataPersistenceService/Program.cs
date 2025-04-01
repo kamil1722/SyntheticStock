@@ -7,17 +7,13 @@ public class Program
     public static async Task Main(string[] args)
     {
         IHost host = Host.CreateDefaultBuilder(args)
-
-               .ConfigureServices(services =>
+               .ConfigureServices((hostContext, services) => // Use hostContext for configuration
                {
-                   var configuration = services.BuildServiceProvider().GetService<IConfiguration>();
-                   if (configuration != null)
-                   {
-                       services.AddHostedService<Worker>(); // Add the  background service
-                       services.AddDbContext<DbContextSyntheticStock>(options => //Add DbContext
-                                   options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-                   }
-                   
+                   // Добавление Worker
+                   services.AddHostedService<Worker>();
+                   // Добавление DbContext
+                   services.AddDbContext<DbContextSyntheticStock>(options =>
+                       options.UseNpgsql(hostContext.Configuration.GetConnectionString("DefaultConnection"))); // Используем hostContext
                })
            .Build();
 

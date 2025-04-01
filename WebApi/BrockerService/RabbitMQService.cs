@@ -22,10 +22,10 @@ public class RabbitMQService : IRabbitMQService
         {
             var factory = new ConnectionFactory()
             {
-                HostName = _configuration["RabbitMQ:HostName"], // Получает из конфигурации
-                Port = _configuration.GetValue<int>("RabbitMQ:Port"),         
-                UserName = _configuration["RabbitMQ:UserName"],
-                Password = _configuration["RabbitMQ:Password"]
+                UserName = _configuration["RABBITMQ_USERNAME"],
+                Password = _configuration["RABBITMQ_PASSWORD"],
+                HostName = _configuration["RABBITMQ_HOST"],
+                Port = int.Parse((_configuration["RABBITMQ_PORT"] ?? throw new Exception()))
             };
 
             _connection = factory.CreateConnection();
