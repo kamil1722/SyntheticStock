@@ -1,12 +1,6 @@
-
-using DataWorkService.Models;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Npgsql;
-using NpgsqlTypes;
+using DataWorkService.Service;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace DataWorkService
@@ -15,14 +9,17 @@ namespace DataWorkService
     {
         private readonly ILogger<Worker> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IPostgreService _postgreService;
 
         private IConnection _connection = null!;
         private IModel _channel = null!;
 
-        public Worker(ILogger<Worker> logger, IConfiguration configuration)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration,
+            IPostgreService postgreService)
         {
             _logger = logger;
             _configuration = configuration;
+            _postgreService = postgreService;
 
             InitializeRabbitMq();
         }
@@ -70,7 +67,7 @@ namespace DataWorkService
                     var message = Encoding.UTF8.GetString(body);
                     _logger.LogInformation($"Received message: {message}");
 
-                    SaveDataToPostgres(message);
+                    _postgreService.SaveDataToPostgres(message);
 
                     _channel.BasicAck(ea.DeliveryTag, false); // Подтверждаем получение сообщения
                 }
@@ -87,59 +84,6 @@ namespace DataWorkService
             {
                 await Task.Delay(1000, stoppingToken);
             }
-        }
-
-        private void SaveDataToPostgres(string message)
-        {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("Connection string is null");
-
-            using (var conn = new NpgsqlConnection(connectionString))
-            {
-                conn.Open();
-
-                try
-                {
-                    var futuresDataList = JsonConvert.DeserializeObject<List<FuturesPriceDifference>>(message) ?? throw new Exception("Parameter futuresData cannot be null");
-
-                    //Валидация (предполагается, что метод IsValid существует и проверяет данные)
-                    if (!IsValid(futuresDataList))
-                    {
-                        _logger.LogError("Invalid message format received: " + message);
-                        throw new Exception("Invalid message format");
-                    }
-
-                    // SQL запрос для пакетной вставки
-                    using (var writer = conn.BeginBinaryImport("COPY \"FuturesPriceDifferences\" (\"symbol1\", \"symbol2\", \"time\", \"difference\", \"interval\") FROM STDIN (FORMAT BINARY)"))
-                    {
-                        foreach (var futuresData in futuresDataList)
-                        {
-                            writer.StartRow();
-                            writer.Write(futuresData.symbol1, NpgsqlDbType.Text);
-                            writer.Write(futuresData.symbol2, NpgsqlDbType.Text);
-                            writer.Write(futuresData.time, NpgsqlDbType.TimestampTz);
-                            writer.Write(futuresData.difference, NpgsqlDbType.Numeric);
-                            writer.Write(futuresData.interval, NpgsqlDbType.Text);
-                        }
-
-                        writer.Complete(); // Ensure data is fully written
-                    }
-
-                    _logger.LogInformation($"Bulk inserted {futuresDataList.Count} rows into PostgreSQL");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error saving data to PostgreSQL: " + ex.Message);
-                    throw; // Re-throw to Nack the message
-                }
-            }
-        }
-
-        //Валидация
-        private bool IsValid(object obj)
-        {
-            var results = new List<ValidationResult>();
-            var context = new ValidationContext(obj);
-            return Validator.TryValidateObject(obj, context, results, true);
         }
 
         public override void Dispose()

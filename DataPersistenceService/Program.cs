@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DataWorkService.Data;
 using DataWorkService;
+using DataWorkService.Service;
 
 public class Program
 {
@@ -11,9 +12,10 @@ public class Program
                {
                    // Добавление Worker
                    services.AddHostedService<Worker>();
+                   // Добавление PostgreService
+                   services.AddSingleton<IPostgreService, PostgreService>();
                    // Добавление DbContext
-                   services.AddDbContext<DbContextSyntheticStock>(options =>
-                       options.UseNpgsql(hostContext.Configuration.GetConnectionString("DefaultConnection"))); // Используем hostContext
+                   services.AddDbContext<DbContextSyntheticStock>(); // Используем hostContext
                })
            .Build();
 

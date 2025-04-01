@@ -1,4 +1,6 @@
-﻿namespace SyntheticStockAspire.AppHost
+﻿using System.Security;
+
+namespace SyntheticStockAspire.AppHost
 {
     public static class EnvironmentSetup
     {
@@ -16,6 +18,15 @@
             Environment.SetEnvironmentVariable("BINANCE_APIKEY", "YOUR_BINANCE_API_KEY");
             Environment.SetEnvironmentVariable("BINANCE_APISECRET", "YOUR_BINANCE_API_SECRET");
 
+        }
+
+        public static void SetPostgreSQLEnvironment()
+        {
+            Environment.SetEnvironmentVariable("POSTGRESQL_HOST", "localhost");
+            Environment.SetEnvironmentVariable("POSTGRESQL_PORT", "5432");
+            Environment.SetEnvironmentVariable("POSTGRESQL_DATABASE", "DB_SyntheticStock");
+            Environment.SetEnvironmentVariable("POSTGRESQL_USERID", "postgres");
+            Environment.SetEnvironmentVariable("POSTGRESQL_PASSWORD", "1722");
         }
     }
 }
