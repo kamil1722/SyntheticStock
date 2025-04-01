@@ -4,7 +4,6 @@ using FuturesService.Services;
 using CryptoExchange.Net.Authentication;
 using Binance.Net.Objects.Options;
 using FuturesService.Services.Interface;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +24,8 @@ builder.Services.AddTransient<IBinanceRestClient, BinanceRestClient>(provider =>
     var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
     var logger = loggerFactory.CreateLogger<BinanceRestClient>();
 
-    var apiKey = configuration["Binance:ApiKey"];
-    var apiSecret = configuration["Binance:ApiSecret"];
+    var apiKey = configuration["BINANCE_APISECRET"];
+    var apiSecret = configuration["BINANCE_APISECRET"];
 
     if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
     {

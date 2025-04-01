@@ -4,10 +4,11 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Параметры окружения
 EnvironmentSetup.SetRabbitMQEnvironment();
+EnvironmentSetup.SetBinanceEnvironment();
 
 // Проекты
-var webApi = builder.AddProject<Projects.WebApi>("webapi");
-var dataWorkService = builder.AddProject<Projects.DataWorkService>("dataworkservice");
+builder.AddProject<Projects.WebApi>("webapi");
+builder.AddProject<Projects.DataWorkService>("dataworkservice");
 
 
 builder.Build().Run();
