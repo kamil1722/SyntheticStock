@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntheticStockAspire.AppHos
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aspire", "Aspire", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWorkService", "DataPersistenceService\DataWorkService.csproj", "{8A916F2D-F1A1-4FE5-A298-8E0B5A087E5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWorkService", "DataWorkService\DataWorkService.csproj", "{8A916F2D-F1A1-4FE5-A298-8E0B5A087E5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

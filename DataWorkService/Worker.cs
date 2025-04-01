@@ -31,7 +31,7 @@ namespace DataWorkService
                 var factory = new ConnectionFactory()
                 {
                     HostName = _configuration["RABBITMQ_HOST"],
-                    Port =  int.Parse((_configuration["RABBITMQ_PORT"] ?? throw new Exception()))
+                    Port = int.Parse((_configuration["RABBITMQ_PORT"] ?? throw new Exception()))
                 };
 
                 _connection = factory.CreateConnection();
@@ -90,26 +90,15 @@ namespace DataWorkService
         {
             if (_channel.IsOpen)
             {
-                try
-                {
-                    _channel.Close();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error closing RabbitMQ channel");
-                }
+                try { _channel.Close(); }
+                catch (Exception ex) { _logger.LogError(ex, "Error closing RabbitMQ channel"); }
             }
 
             if (_connection.IsOpen)
             {
                 try
-                {
-                    _connection.Close();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error closing RabbitMQ connection");
-                }
+                { _connection.Close(); }
+                catch (Exception ex) { _logger.LogError(ex, "Error closing RabbitMQ connection"); }
             }
 
             base.Dispose();

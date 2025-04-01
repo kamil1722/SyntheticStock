@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\DataPersistenceService\DataWorkService.csproj" />
+		<ProjectReference Include="..\..\DataWorkService\DataWorkService.csproj" />
 		<ProjectReference Include="..\..\WebApi\WebApi.csproj" />
 	</ItemGroup>
 
