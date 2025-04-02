@@ -31,9 +31,8 @@ CREATE TABLE IF NOT EXISTS public."FuturesPriceDifferences"
 
 ```
 # Инструкция по применению 
-1. запустить SyntheticStockAspire.AppHost
-2. выбираем webapi
+запустить SyntheticStockAspire.AppHost , выбираем webapi
 
 Формат для ввода данных:
-symbol: BTCUSDT, ETCUSDT, и тд
-time: 2025-01-01T00:00:00
+1. symbol: BTCUSDT, ETCUSDT, и т
+2. time: 2025-01-01T00:00:00
