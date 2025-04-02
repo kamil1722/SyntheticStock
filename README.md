@@ -16,7 +16,7 @@
 2. Внедрение .NET Aspire. Позволяет управлять проектами(оркестрация, управление параметрами ресурсов, упрощенная контейниризация), благодаря чему такие параметры как пороль, порты, имена пользователей можно объявлять в одном [файле](Aspire/SyntheticStockAspire.AppHost/EnvironmentSetup.cs)
 
 # Скрипт таблицы PostgreSQL
-``
+```
 
 CREATE TABLE IF NOT EXISTS public."FuturesPriceDifferences"
 (
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public."FuturesPriceDifferences"
     CONSTRAINT "PK_FuturesPriceDifferences" PRIMARY KEY (id)
 )
 
-``
+```
 # Инструкция по применению 
 1. запустить SyntheticStockAspire.AppHost
 2. выбираем webapi
