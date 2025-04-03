@@ -36,3 +36,4 @@ CREATE TABLE IF NOT EXISTS public."FuturesPriceDifferences"
 Формат для ввода данных:
 1. symbol: BTCUSDT, ETCUSDT, и тд
 2. time: 2025-01-01T00:00:00
+3. interval: 1m, 5m, 15m, 30m, 1h, 4h. 1d, 1w, 1M
