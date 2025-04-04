@@ -73,8 +73,8 @@ namespace FuturesService.Services
 
             var results = new List<PriceDifferenceResult>();
 
-            decimal? lastPrice1 = null;
-            decimal? lastPrice2 = null;
+            decimal? lastPrice1 = 0;
+            decimal? lastPrice2 = 0;
 
             foreach (var timestamp in allTimestamps)
             {
@@ -94,7 +94,7 @@ namespace FuturesService.Services
                 if (lastPrice1.HasValue && lastPrice2.HasValue)
                 {
                     var diff = Math.Abs(lastPrice1.Value - lastPrice2.Value);
-                    results.Add(new PriceDifferenceResult { Time = timestamp, Difference = diff });
+                    results.Add(new PriceDifferenceResult { Price1 = lastPrice1 ?? 0, Price2 = lastPrice2 ?? 0,  Time = timestamp, Difference = diff });
                 }
             }
 
@@ -112,6 +112,8 @@ namespace FuturesService.Services
                 {
                     symbol1 = symbol1,
                     symbol2 = symbol2,
+                    price1 = diff.Price1,
+                    price2 = diff.Price2,
                     time = diff.Time,
                     difference = diff.Difference,
                     interval = interval

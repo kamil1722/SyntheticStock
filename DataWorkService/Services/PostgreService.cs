@@ -37,13 +37,16 @@ namespace DataWorkService.Service
                     }
 
                     // SQL запрос для пакетной вставки
-                    using (var writer = conn.BeginBinaryImport("COPY \"FuturesPriceDifferences\" (\"symbol1\", \"symbol2\", \"time\", \"difference\", \"interval\") FROM STDIN (FORMAT BINARY)"))
+                    using (var writer = conn.BeginBinaryImport("COPY \"FuturesPriceDifferences\" (\"symbol1\", \"symbol2\", \"price1\", \"price2\", \"time\"," +
+                        " \"difference\", \"interval\") FROM STDIN (FORMAT BINARY)"))
                     {
                         foreach (var futuresData in futuresDataList)
                         {
                             writer.StartRow();
                             writer.Write(futuresData.symbol1, NpgsqlDbType.Text);
                             writer.Write(futuresData.symbol2, NpgsqlDbType.Text);
+                            writer.Write(futuresData.price1, NpgsqlDbType.Numeric);
+                            writer.Write(futuresData.price2, NpgsqlDbType.Numeric);
                             writer.Write(futuresData.time, NpgsqlDbType.TimestampTz);
                             writer.Write(futuresData.difference, NpgsqlDbType.Numeric);
                             writer.Write(futuresData.interval, NpgsqlDbType.Text);

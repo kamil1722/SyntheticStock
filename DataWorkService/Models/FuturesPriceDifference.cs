@@ -14,6 +14,12 @@ namespace DataWorkService.Models
         public string symbol2 { get; set; } = null!; // Добавляем nullable suppression operator
 
         [Required]
+        public decimal price1 { get; set; }
+
+        [Required]
+        public decimal price2 { get; set; }
+
+        [Required]
         public DateTime time { get; set; }
 
         public decimal difference { get; set; }
