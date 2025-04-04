@@ -1,6 +1,7 @@
 ﻿using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
+using CryptoExchange.Net.CommonObjects;
 using FuturesService.Models;
 using FuturesService.Services.Interface;
 using Microsoft.Extensions.Logging;
@@ -98,6 +99,26 @@ namespace FuturesService.Services
             }
 
             return results;
+        }
+
+        public List<FuturesPriceDifference> GetFutures(List<PriceDifferenceResult> priceDifferences, string symbol1, string symbol2, string interval)
+        {
+
+            var futuresDataList = new List<FuturesPriceDifference>();
+
+            foreach (var diff in priceDifferences)
+            {
+                futuresDataList.Add(new FuturesPriceDifference
+                {
+                    symbol1 = symbol1,
+                    symbol2 = symbol2,
+                    time = diff.Time,
+                    difference = diff.Difference,
+                    interval = interval
+                });
+            }
+
+            return futuresDataList;
         }
     }
 }

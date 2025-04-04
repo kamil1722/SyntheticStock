@@ -47,19 +47,7 @@ namespace FuturesService.Controllers
                     return NotFound("No price differences found for the specified period.");
                 }
 
-                var futuresDataList = new List<FuturesPriceDifference>();
-
-                foreach (var diff in priceDifferences)
-                {
-                    futuresDataList.Add(new FuturesPriceDifference
-                    {
-                        symbol1 = symbol1,
-                        symbol2 = symbol2,
-                        time = diff.Time,
-                        difference = diff.Difference,
-                        interval = interval
-                    });
-                }
+                var futuresDataList = _futuresDataService.GetFutures(priceDifferences, symbol1, symbol2, interval);
 
                 _rabbitMQService.Publish(futuresDataList, "futures.exchange", "futures.data");
                 _logger.LogInformation($"Published FuturesPriceDifference to RabbitMQ: Symbol1={symbol1}, Symbol2={symbol2}, Time={startTime} - {endTime}");
