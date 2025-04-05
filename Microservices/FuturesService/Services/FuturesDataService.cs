@@ -1,7 +1,6 @@
 ﻿using Binance.Net.Enums;
 using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
-using CryptoExchange.Net.CommonObjects;
 using FuturesService.Models;
 using FuturesService.Services.Interface;
 using Microsoft.Extensions.Logging;
