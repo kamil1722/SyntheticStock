@@ -19,9 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataWorkService", "DataWork
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8C3AA9B9-57DF-4E55-8A7D-46704B399960}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuturesService.Tests", "FuturesService.Tests\FuturesService.Tests.csproj", "{71C7EAA7-1AA2-41BA-9493-3366F57F9A2E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuturesService.Tests", "Tests\FuturesService.Tests\FuturesService.Tests.csproj", "{71C7EAA7-1AA2-41BA-9493-3366F57F9A2E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmptyService.Tests", "EmptyService.Tests\EmptyService.Tests.csproj", "{90844AE4-72B2-4839-AE3C-BBA7516B021D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmptyService.Tests", "Tests\EmptyService.Tests\EmptyService.Tests.csproj", "{90844AE4-72B2-4839-AE3C-BBA7516B021D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
