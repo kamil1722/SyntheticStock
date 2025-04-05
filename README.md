@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS public."FuturesPriceDifferences"
 
 ```
 # Инструкция по применению 
-запустить SyntheticStockAspire.AppHost , выбираем webapi
+1. настраиваем параметры подключения к Бд и RabbitMQ в [файле](Aspire/SyntheticStockAspire.AppHost/EnvironmentSetup.cs)
+2. запускаем SyntheticStockAspire.AppHost
+3. запускаем webapi
 
 Формат для ввода данных:
 1. symbol: BTCUSDT, ETCUSDT, и тд
